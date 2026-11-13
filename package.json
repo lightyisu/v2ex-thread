@@ -1,0 +1,19 @@
+{
+  "name": "v2exthread",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "v2exthread：把 @回复 形成对话树",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.24.0",
+    "linkedom": "^0.18.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,8 @@
+/* 树就绪（Phase 1 加上 .vxf-threaded 或切回 .vxf-raw）前短暂隐藏原回复列表，避免平铺→树的闪屏 */
+div.box:has(div.cell[id^="r_"]):not(.vxf-threaded):not(.vxf-raw) {
+  visibility: hidden;
+}
+/* 兜底超时后强制显示：宁可闪一次，也不能让回复区永久空白 */
+html.vxf-fallback div.box:has(div.cell[id^="r_"]) {
+  visibility: visible !important;
+}

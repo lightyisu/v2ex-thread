@@ -1,0 +1,21 @@
+# Dependencies & build output
+node_modules/
+dist/
+
+# Local design & assistant scratch files
+brand/
+vibe_images/
+.workbuddy/
+
+# OS & editor files
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Environment & logs
+.env
+.env.*
+*.log
+npm-debug.log*
