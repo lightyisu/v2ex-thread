@@ -41,13 +41,9 @@ import type { Floor } from './types';
   }
 
   function resolveHashFloor(floors: Floor[], hash: string): Floor | null {
+    // 只认 #r_xxx 精确楼层 permalink；首页“最后回复”的 #replyN 不在进入时自动滚动
     const byId = /^#r_(\d+)$/.exec(hash);
     if (byId) return floors.find((f) => f.replyId === byId[1]) ?? null;
-    const byNo = /^#reply(\d+)$/.exec(hash);
-    if (byNo) {
-      const no = parseInt(byNo[1], 10);
-      return floors.find((f) => f.no === no) ?? null;
-    }
     return null;
   }
 
@@ -103,7 +99,7 @@ import type { Floor } from './types';
     // Phase 1 已解除隐藏，立即撤掉兜底定时器
     window.clearTimeout((window as unknown as { __vxfFallback?: number }).__vxfFallback);
 
-    // 定位到目标楼层：初次进入为 #r_xxx/#replyN 锚点，AJAX 回复后为刚发送的新回复
+    // 定位到目标楼层：初次进入为 #r_xxx 锚点，AJAX 回复后为刚发送的新回复
     if (phase1Target) {
       scrollToFloor(phase1Target, {
         behavior: isReplyRefresh && meta.totalPages <= 1 ? 'smooth' : 'auto',
