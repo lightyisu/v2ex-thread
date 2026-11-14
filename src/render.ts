@@ -113,23 +113,35 @@ export class View {
     else this.showOriginal();
   }
 
-  buildThread() {
+  buildThread(opts?: { anchorNo?: number; preserveScroll?: boolean }) {
     if (!this.tree) return;
     const box = this.deps.box;
 
-    // Phase 2 增量合并时锁定当前视口内正在阅读的楼层，避免页面跳动
+    // Phase 2 增量合并时锁定目标楼层或当前视口内正在阅读的楼层，避免页面跳动
     let anchorNo: number | null = null;
     let anchorTop = 0;
-    if (this.treeEl.isConnected && window.scrollY > 0) {
-      const nodes = this.treeEl.querySelectorAll<HTMLElement>('.vxf-node');
-      for (const n of nodes) {
-        const rect = n.getBoundingClientRect();
-        if (rect.bottom > 0 && rect.top < window.innerHeight) {
-          const no = parseInt(n.dataset.no ?? '', 10);
-          if (Number.isFinite(no)) {
-            anchorNo = no;
+    const preserveScroll = opts?.preserveScroll ?? true;
+    if (preserveScroll && this.treeEl.isConnected && (window.scrollY > 0 || opts?.anchorNo != null)) {
+      if (opts?.anchorNo != null) {
+        const preferred = this.wrappers.get(opts.anchorNo);
+        if (preferred) {
+          const rect = preferred.getBoundingClientRect();
+          if (rect.bottom > 0 && rect.top < window.innerHeight) {
+            anchorNo = opts.anchorNo;
             anchorTop = rect.top;
-            break;
+          }
+        }
+      } else {
+        const nodes = this.treeEl.querySelectorAll<HTMLElement>('.vxf-node');
+        for (const n of nodes) {
+          const rect = n.getBoundingClientRect();
+          if (rect.bottom > 0 && rect.top < window.innerHeight) {
+            const no = parseInt(n.dataset.no ?? '', 10);
+            if (Number.isFinite(no)) {
+              anchorNo = no;
+              anchorTop = rect.top;
+              break;
+            }
           }
         }
       }
@@ -256,19 +268,36 @@ export class View {
     }
   }
 
-  private jumpTo(no: number) {
+  jumpTo(no: number, opts?: { behavior?: ScrollBehavior; flash?: boolean }) {
     const node = this.wrappers.get(no);
     if (!node) {
       this.toast('未找到该楼层', 'warn');
       return;
     }
-    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    const cell = this.cells.get(no);
-    if (cell) {
-      cell.classList.remove('vxf-flash');
-      void cell.offsetWidth;
-      cell.classList.add('vxf-flash');
-      window.setTimeout(() => cell.classList.remove('vxf-flash'), 1900);
+    const target = this.cells.get(no) ?? node;
+    target.scrollIntoView({ behavior: opts?.behavior ?? 'smooth', block: 'center' });
+    if (opts?.flash ?? true) {
+      this.flashFloor(no);
     }
+  }
+
+  flashFloor(no: number) {
+    const cell = this.cells.get(no);
+    if (!cell) return;
+    cell.classList.remove('vxf-flash');
+    void cell.offsetWidth;
+    cell.classList.add('vxf-flash');
+    window.setTimeout(() => cell.classList.remove('vxf-flash'), 1900);
+  }
+
+  isFloorCentered(no: number): boolean {
+    const target = this.cells.get(no) ?? this.wrappers.get(no);
+    if (!target) return false;
+    const rect = target.getBoundingClientRect();
+    if (rect.height > window.innerHeight) {
+      return rect.top >= 0 && rect.top < window.innerHeight * 0.5;
+    }
+    const center = (rect.top + rect.bottom) / 2;
+    return rect.top >= 0 && rect.bottom <= window.innerHeight && Math.abs(center - window.innerHeight / 2) <= 64;
   }
 }
